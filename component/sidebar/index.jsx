@@ -1,10 +1,17 @@
-import { Collapse, Nav, NavbarBrand, NavItem } from "reactstrap"
+import {
+    Collapse,
+    Nav,
+    NavbarBrand,
+    NavItem
+} from "reactstrap"
 import { NavLink } from 'react-router-dom'
-import Icon from "global/icon"
-import Profile from "./profile"
-import logo from "assets/logo.png"
-import avatar from "assets/avatar.svg"
-import 'bootheme/sidebar.scss'
+import Profile from "../profile"
+import { useMediaQuery } from "react-responsive";
+
+import Icon from "../../global/icon"
+import logo_def from "../../assets/image/logo.png"
+import avatar_def from "../../assets/image/avatar.svg"
+import { useTypedSelector } from "reduxboot/app/store";
 
 const navFuncItem = [
     {
@@ -24,6 +31,7 @@ const navFuncItem = [
         icon: <Icon.TASK />,
         exact: false,
     }]
+
 const navOtherItem = [
     {
         title: "Settings",
@@ -38,20 +46,32 @@ const navOtherItem = [
     },
 ]
 
-
 const Sidebar = props => {
+
+    const isBigScreen = useMediaQuery({
+        query: '(min-width: 768px)'
+    })
+
     const collapseOpen = props.collapse
+    const { logo, title } = props
+
+    const user = useTypedSelector(state => state.accountSlice.data)
 
     return (
-        <Collapse isOpen={collapseOpen}>
+        <Collapse isOpen={isBigScreen ? collapseOpen : !collapseOpen}>
             <Nav className="px-2" vertical>
                 <NavbarBrand
                     className="mx-auto d-none d-md-block"
                     href='/'>
-                    <img src={logo} />
-                    <span className="sidebar__title">CEREBRO ORC</span>
+                    <img src={logo ?? logo_def} />
+                    <span className="sidebar__title">{title ?? "CEREBRO ORC"}</span>
                 </NavbarBrand>
-                <Profile className="d-none d-md-flex" avatar={avatar} name={'Phạm Trung Hiếu'} email={'hieupt.ai@gmail.com'} />
+                <Profile
+                    className="d-none d-md-flex"
+                    avatar={user.avatar ?? avatar_def}
+                    name={user.name ?? 'Phạm Trung Hiếu'}
+                    email={user.email ?? 'hieupt.ai@gmail.com'}
+                />
                 {navFuncItem.map(({ title, to, icon, exact }, idx) => {
                     return <NavItem key={idx} >
                         <NavLink

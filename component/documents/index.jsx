@@ -1,6 +1,5 @@
 import { Button, Table, Input } from "reactstrap"
-import Icon from "global/icon"
-import 'bootheme/document.scss'
+import Icon from "../../global/icon"
 
 const mockupData = [
     {
@@ -32,12 +31,20 @@ const statusColor = (scoreStr, spliter) => {
     return { color: "green" }
 }
 
-const Body = () => {
+const Documents = () => {
     return <div className="document">
         <div className="document__container">
             <div className="action">
                 <div className="float-left">
-                    <Button color="success">Upload</Button>
+                    <label className="btn btn-success" style={{ cursor: "pointer" }}>
+                        Upload
+                        <input
+                            type="file"
+                            accept="application/pdf"
+                            onChange={(e) => { console.log(e.target.files) }}
+                            hidden multiple />
+                    </label>
+
                     <Button color="danger">Delete</Button>
                 </div>
                 <div className="float-right">
@@ -76,4 +83,4 @@ const Body = () => {
         </div>
     </div>
 }
-export default Body
+export default Documents
