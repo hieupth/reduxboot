@@ -1,10 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { document } from "reduxboot/global/datatype";
 
 type fetchState = {
     status: "loading" | "idle",
     err: string | null,
-    data: document,
+    data: {
+        [_id: string]: {
+            link: string,
+            name: string,
+            owner: string,
+            score: string,
+            updated: Date,
+        }
+    },
 }
 
 const initialState = {
@@ -13,12 +20,12 @@ const initialState = {
     data: {}
 } as fetchState
 
-const documentSlice = createSlice({
-    name: 'notification',
+const FileList = createSlice({
+    name: 'files',
     initialState: initialState,
-    reducers: {}
+    reducers: {},
 })
 
-const { reducer, actions } = documentSlice
+const { reducer, actions } = FileList
 export const { } = actions
 export default reducer
