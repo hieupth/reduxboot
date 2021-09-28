@@ -1,24 +1,29 @@
 import { Button, Table, Input } from "reactstrap"
 import Icon from "../../global/icon"
+import { useState, useEffect } from "react"
 
-const mockupData = [
-    {
-        Icon: <Icon.FOLDER />,
-        Name: "document-abc-xyz",
-        Owner: "hieupt.ai@gmail.com",
-        Process: "50%",
-        Score: "45/100",
-        Updated: "5 Minutes ago"
-    },
-    {
-        Icon: <Icon.FILE />,
-        Name: "certification",
-        Owner: "hieupt.ai@gmail.com",
-        Process: "100%",
-        Score: "85/100",
-        Updated: "15 Minutes ago"
-    },
-]
+// const mockupData = [
+//     {
+//         Icon: <Icon.FOLDER />,
+//         Name: "document-abc-xyz",
+//         Owner: "hieupt.ai@gmail.com",
+//         Process: "50%",
+//         Score: "45/100",
+//         Updated: "5 Minutes ago",
+//         Id: 1,
+//         isChecked: false
+//     },
+//     {
+//         Icon: <Icon.FILE />,
+//         Name: "certification",
+//         Owner: "hieupt.ai@gmail.com",
+//         Process: "100%",
+//         Score: "85/100",
+//         Updated: "15 Minutes ago",
+//         Id: 2,
+//         isChecked: false
+//     },
+// ]
 
 const statusColor = (scoreStr, spliter) => {
     let score = parseFloat(scoreStr.split(spliter)[0])
@@ -31,7 +36,84 @@ const statusColor = (scoreStr, spliter) => {
     return { color: "green" }
 }
 
-const Documents = () => {
+
+const Documents = (props) => {
+    const {documentList} = props
+    const [isCheckedAll, setIsCheckedAll] = useState(false)
+    const [documents, setDocuments] = useState([])
+
+    useEffect(() => {
+        setDocuments(documentList)
+    },[documentList])
+
+    const onUploadFile = (files) => {
+        props.onUploadFile(files[0])
+    }
+    
+    const onChecked = (id) => {
+        let temp = documents.map(document => {
+            if (id === document.id) {
+                document.isChecked = !document.isChecked
+            }
+            return {
+                ...document, isChecked: document.isChecked
+            }
+        })
+        setDocuments(temp)
+        renderCheckedAll(documents)
+    }
+    
+    const onCheckedAll = () => {
+        setIsCheckedAll(!isCheckedAll)
+        documents.forEach((document) => {
+            document.isChecked = !isCheckedAll
+        })
+        
+    }
+
+    const renderCheckedAll = (documents) => {
+        let checkedInput = documents.filter(document => document.isChecked === true)
+        checkedInput.length === documents.length ? setIsCheckedAll(true) : setIsCheckedAll(false);
+    }
+
+    const onDelete = () => { 
+        documents.map(document => {
+            if (document.isChecked) {
+                props.onDelete(document.id);
+            }
+    })
+}
+
+
+    const showDocuments = (documents) => {
+        return documents.map((document, index) => {
+            return (
+            <tr key={index}>
+                <td scope="row">
+                    <Input 
+                        type="checkbox" 
+                        style={{ cursor: "pointer" }} 
+                        onChange={() => onChecked(document.id)}
+                        checked={document.isChecked}
+                        />
+                </td>
+                <td className="tb__name">
+                    {document.icon === 'folder' ? <Icon.FOLDER /> : <Icon.FILE /> }
+                    <span>{document.name}</span>
+                </td>
+                <td className="tb__detail">{document.owner}</td>
+                <td 
+                    style={statusColor(document.process, '%')}
+                >{document.process}</td>
+                <td 
+                    style={statusColor(document.score, '/')}
+                >{document.score}</td>
+                <td className="tb__detail">{document.updated}</td>
+            </tr>
+        )})
+    }
+
+
     return <div className="document">
         <div className="document__container">
             <div className="action">
@@ -41,20 +123,30 @@ const Documents = () => {
                         <input
                             type="file"
                             accept="application/pdf"
-                            onChange={(e) => { console.log(e.target.files) }}
+                            onChange={(e) => onUploadFile(e.target.files)}
                             hidden multiple />
                     </label>
 
-                    <Button color="danger">Delete</Button>
+                    <Button color="danger" 
+                        onClick={onDelete}
+                        disabled={documents.filter(document => document.isChecked !== true).length > 1}    
+                    >Delete</Button>
                 </div>
                 <div className="float-right">
-                    <Button color="primary">Download</Button>
+                    <Button color="primary" >Download</Button>
                 </div>
             </div>
             <Table responsive hover>
                 <thead>
                     <tr>
-                        <th><Input type="checkbox" /></th>
+                        <th>
+                            <Input 
+                                type="checkbox" 
+                                style={{ cursor: "pointer" }} 
+                                onChange={onCheckedAll}  
+                                checked={isCheckedAll}
+                                />
+                        </th>
                         <th>Name</th>
                         <th>Owner</th>
                         <th>Process</th>
@@ -63,21 +155,7 @@ const Documents = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {mockupData.map(({ Icon, Name, Owner, Process, Score, Updated }) => {
-                        return <tr>
-                            <td scope="row">
-                                <Input type="checkbox" />
-                            </td>
-                            <td className="tb__name">
-                                {Icon}
-                                <span>{Name}</span>
-                            </td>
-                            <td className="tb__detail">{Owner}</td>
-                            <td style={statusColor(Process, '%')}>{Process}</td>
-                            <td style={statusColor(Score, '/')}>{Score}</td>
-                            <td className="tb__detail">{Updated}</td>
-                        </tr>
-                    })}
+                    {showDocuments(documents)}
                 </tbody>
             </Table>
         </div>
