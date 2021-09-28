@@ -58,7 +58,7 @@ const Sidebar = props => {
             <div className="sidebar__sticky">
                 <Nav className="px-2" vertical>
                     <NavbarBrand
-                        className="mx-auto d-none d-md-block"
+                        className="d-none d-md-block"
                         href='/'>
                         <img src={logo ?? logo_def} />
                         <span className="sidebar__title">{title ?? "CEREBRO ORC"}</span>
