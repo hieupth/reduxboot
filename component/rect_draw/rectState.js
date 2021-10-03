@@ -51,7 +51,6 @@ const style = {
 const RectDraw = props => {
     
     const { rect, setRect, maxWidth, maxHeight } = props
-    console.log(rect)
 
     const handleResize = (e, direction, ref, delta, position, idx) => {
         let { width, height } = ref.style
@@ -79,8 +78,8 @@ const RectDraw = props => {
             style={style}
             size={{ width: r.width, height: r.height }}
             position={{ x: (r.x - r.width / 2), y: (r.y - r.height / 2)}}
-            onDragStop={(e, d) => handleDrag(d, i)}
-            onResizeStop={(e, direction, ref, delta, position) => handleResize(e, direction, ref, delta, position, i)}
+            onDrag={(e, d) => handleDrag(d, i)}
+            onResize={(e, direction, ref, delta, position) => handleResize(e, direction, ref, delta, position, i)}
         >
             {i + 1}
         </Rnd>
