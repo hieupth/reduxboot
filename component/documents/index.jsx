@@ -1,6 +1,8 @@
 import { Button, Table, Input } from "reactstrap"
 import Icon from "../../global/icon"
 import { useState, useEffect } from "react"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.min.css';
 
 // const mockupData = [
 //     {
@@ -47,11 +49,18 @@ const Documents = (props) => {
     },[documentList])
 
     const onUploadFile = (files) => {
-        props.onUploadFile(files[0])
+            props.onUploadFile(files)
     }
     
     const onChecked = (id) => {
         let temp = documents.map(document => {
+            if (document.children) {
+                document.children.forEach(file => {
+                    if (id === file.id) {
+                        file.isChecked = !file.isChecked
+                    }
+                })
+            }
             if (id === document.id) {
                 document.isChecked = !document.isChecked
             }
@@ -78,17 +87,43 @@ const Documents = (props) => {
 
     const onDelete = () => { 
         documents.map(document => {
+            if (document.children) {
+                document.children.forEach(file => {
+                    if (file.isChecked) {
+                        props.onDelete(document.id,file.id);
+                    }
+                })
+            }
+            if (document.isChecked) {
+                props.onDelete(document.id, null);
+            }
+        })
+    }
+
+    const onDownload = () => { 
+        documents.map(document => {
             if (document.isChecked) {
                 props.onDelete(document.id);
             }
-    })
-}
+        })
+    }
 
+    const displayFolderFiles = (id) => {
+        let temp = documents.map(document => {
+            if (id === document.id) {
+                document.isDisplayChild = !document.isDisplayChild
+            }
+            return {
+                ...document, isDisplayChild: document.isDisplayChild
+            }
+        })
+        setDocuments(temp)
+    }
 
-    const showDocuments = (documents) => {
-        return documents.map((document, index) => {
-            return (
-            <tr key={index}>
+    const showFolders = (document) => {
+        return (
+            <>
+            <tr key={document.id}>
                 <td scope="row">
                     <Input 
                         type="checkbox" 
@@ -97,8 +132,42 @@ const Documents = (props) => {
                         checked={document.isChecked}
                         />
                 </td>
-                <td className="tb__name">
-                    {document.icon === 'folder' ? <Icon.FOLDER /> : <Icon.FILE /> }
+                <td className="tb__name" 
+                    style={{ cursor: "pointer" }}
+                    onClick={() => displayFolderFiles(document.id)}>
+                        <Icon.FOLDER /> 
+                        <span>{document.name} </span>
+                </td>
+                <td className="tb__detail">{document.owner}</td>
+                <td 
+                    style={statusColor(document.process, '%')}
+                >{document.process}</td>
+                <td 
+                    style={statusColor(document.score, '/')}
+                >{document.score}</td>
+                <td className="tb__detail">{document.updated}</td>
+            </tr>
+
+                {document.isDisplayChild ? document.children.map((file) => {
+                    return showFiles(file, '32px')
+                }) : null}
+            </>
+        )
+    }
+
+    const showFiles = (document, paddingLeft) => {
+        return (
+            <tr key={document.id}>
+                <td scope="row">
+                    <Input 
+                        type="checkbox" 
+                        style={{ cursor: "pointer" }} 
+                        onChange={() => onChecked(document.id)}
+                        checked={document.isChecked}
+                        />
+                </td>
+                <td className="tb__name" onClick={() => console.log('files')} style={{ paddingLeft: paddingLeft }}>
+                    <Icon.FILE />
                     <span>{document.name}</span>
                 </td>
                 <td className="tb__detail">{document.owner}</td>
@@ -110,9 +179,19 @@ const Documents = (props) => {
                 >{document.score}</td>
                 <td className="tb__detail">{document.updated}</td>
             </tr>
-        )})
+        )    
     }
 
+
+    const showDocuments = (documents) => {
+        return documents.map((document) => {
+            if (document.icon === 'folder') {
+                return showFolders(document)
+            } else {
+                return showFiles(document)
+            }
+    })
+    }
 
     return <div className="document">
         <div className="document__container">
@@ -129,11 +208,11 @@ const Documents = (props) => {
 
                     <Button color="danger" 
                         onClick={onDelete}
-                        disabled={documents.filter(document => document.isChecked !== true).length > 1}    
+                        // disabled={documents.filter(document => document.isChecked !== true).length === documents.length}    
                     >Delete</Button>
                 </div>
                 <div className="float-right">
-                    <Button color="primary" >Download</Button>
+                    <Button color="primary" onClick={onDownload}>Download</Button>
                 </div>
             </div>
             <Table responsive hover>
@@ -159,6 +238,7 @@ const Documents = (props) => {
                 </tbody>
             </Table>
         </div>
+        <ToastContainer />
     </div>
 }
 export default Documents
