@@ -1,7 +1,7 @@
 import { Button, Table, Input } from "reactstrap"
 import Icon from "../../global/icon"
 import { useState, useEffect } from "react"
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
 import {Link} from 'react-router-dom'
 
@@ -20,10 +20,71 @@ const statusColor = (scoreStr, spliter) => {
 const Templates = (props) => {
     const {documentList} = props
     const [documents, setDocuments] = useState([])
+    const [isCheckedAll, setIsCheckedAll] = useState(false)
 
     useEffect(() => {
         setDocuments(documentList)
     },[documentList])
+
+    const onUploadFile = (files) => {
+            props.onUploadFile(files)
+    }
+    
+    const onChecked = (id) => {
+        let temp = documents.map(document => {
+            if (document.children) {
+                document.children.forEach(file => {
+                    if (id === file.id) {
+                        file.isChecked = !file.isChecked
+                    }
+                })
+            }
+            if (id === document.id) {
+                document.isChecked = !document.isChecked
+            }
+            return {
+                ...document, isChecked: document.isChecked
+            }
+        })
+        setDocuments(temp)
+        renderCheckedAll(documents)
+    }
+    
+    const onCheckedAll = () => {
+        setIsCheckedAll(!isCheckedAll)
+        documents.forEach((document) => {
+            document.isChecked = !isCheckedAll
+        })
+        
+    }
+
+    const renderCheckedAll = (documents) => {
+        let checkedInput = documents.filter(document => document.isChecked === true)
+        checkedInput.length === documents.length ? setIsCheckedAll(true) : setIsCheckedAll(false);
+    }
+
+    const onDelete = () => { 
+        documents.map(document => {
+            if (document.children) {
+                document.children.forEach(file => {
+                    if (file.isChecked) {
+                        props.onDelete(document.id,file.id);
+                    }
+                })
+            }
+            if (document.isChecked) {
+                props.onDelete(document.id, null);
+            }
+        })
+    }
+
+    const handleDownload = () => { 
+        documents.map(document => {
+            if (document.isChecked) {
+                props.handleDownload(document.file);
+            }
+        })
+    }
 
     const displayFolderFiles = (id) => {
         let temp = documents.map(document => {
@@ -45,6 +106,7 @@ const Templates = (props) => {
                     <Input 
                         type="checkbox" 
                         style={{ cursor: "pointer" }} 
+                        onChange={() => onChecked(document.id)}
                         checked={document.isChecked}
                         />
                 </td>
@@ -79,12 +141,15 @@ const Templates = (props) => {
                     <Input 
                         type="checkbox" 
                         style={{ cursor: "pointer" }} 
+                        onChange={() => onChecked(document.id)}
                         checked={document.isChecked}
                         />
                 </td>
                 <td className="tb__name"  style={{ paddingLeft: paddingLeft }}>
-                    <Icon.FILE />
-                    <Link to="/pdf/1/1" target="_blank" onClick={() => console.log('files: ', document)}>{document.name}</Link>
+                    <Link to="/pdf/1/1" target="_blank" onClick={() => console.log('files: ', document)}>
+                        <Icon.FILE />
+                        {document.name}
+                    </Link>
                 </td>
                 <td className="tb__detail">{document.owner}</td>
                 <td 
@@ -118,15 +183,17 @@ const Templates = (props) => {
                         <input
                             type="file"
                             accept="application/pdf"
+                            onChange={(e) => onUploadFile(e.target.files)}
                             hidden multiple />
                     </label>
 
                     <Button color="danger" 
-                        // disabled={documents.filter(document => document.isChecked !== true).length === documents.length}    
+                        onClick={onDelete}
+                        disabled={documents.filter(document => document.isChecked !== true).length === documents.length}    
                     >Delete</Button>
                 </div>
                 <div className="float-right">
-                    <Button color="primary" >Download</Button>
+                    <Button color="primary" onClick={handleDownload}>Download</Button>
                 </div>
             </div>
             <Table responsive hover>
@@ -136,6 +203,8 @@ const Templates = (props) => {
                             <Input 
                                 type="checkbox" 
                                 style={{ cursor: "pointer" }} 
+                                onChange={onCheckedAll}  
+                                checked={isCheckedAll}
                                 />
                         </th>
                         <th>Name</th>

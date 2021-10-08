@@ -100,12 +100,16 @@ const Documents = (props) => {
         })
     }
 
-    const onDownload = () => { 
-        documents.map(document => {
-            if (document.isChecked) {
-                props.onDelete(document.id);
-            }
-        })
+    const handleDownload = (file) => { 
+        if (file) {
+            props.handleDownload(file)
+        } else {
+            documents.map(document => {
+                if (document.isChecked) {
+                    props.handleDownload(document.file);
+                }
+            })
+        }
     }
 
     const displayFolderFiles = (id) => {
@@ -166,7 +170,7 @@ const Documents = (props) => {
                         checked={document.isChecked}
                         />
                 </td>
-                <td className="tb__name" onClick={() => console.log('files')} style={{ paddingLeft: paddingLeft }}>
+                <td className="tb__name" onClick={() => handleDownload(document.file)} style={{ paddingLeft: paddingLeft, cursor:"pointer" }}>
                     <Icon.FILE />
                     <span>{document.name}</span>
                 </td>
@@ -208,11 +212,11 @@ const Documents = (props) => {
 
                     <Button color="danger" 
                         onClick={onDelete}
-                        // disabled={documents.filter(document => document.isChecked !== true).length === documents.length}    
+                        disabled={documents.filter(document => document.isChecked !== true).length === documents.length}    
                     >Delete</Button>
                 </div>
                 <div className="float-right">
-                    <Button color="primary" onClick={onDownload}>Download</Button>
+                    <Button color="primary" onClick={() => handleDownload()}>Download</Button>
                 </div>
             </div>
             <Table responsive hover>
