@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Document, Page } from "react-pdf";
-import { Button } from 'reactstrap';
+import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 import { useMediaQuery } from "react-responsive";
 import { RectDraw } from '../rect_draw/rectState';
 import {
@@ -12,7 +12,6 @@ import SibarPdf from 'reduxboot/component/Pdf_reader/sidebar/index'
 
 import { pdfjs } from 'react-pdf';
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-
 
 function getWindowDimensions() {
     const { innerWidth: width, innerHeight: height } = window;
@@ -52,9 +51,13 @@ const PdfReader = () => {
 
     // PDF document hooks
     const [rectList, setRectList] = useState([[]])
-    const addRect = () => {
+    const [rectInfo, setRectInfo] = useState()
+    const [selected, setSelected] = useState()
+
+    const addRect = (id) => {
         let temp = [...rectList]
         temp[pageNumber - 1].push({
+            id: id,
             width: 100,
             height: 100,
             x: 50,
@@ -63,12 +66,19 @@ const PdfReader = () => {
         setRectList(temp)
     }
 
-    console.log('rectList: ', rectList)
-
-    const deleteRect = () => {
+    const deleteRect = (id) => {
         let temp = [...rectList]
-        temp[pageNumber - 1].pop()
+        let index
+        for (let i = 0; i < temp[pageNumber - 1].length; i++) {
+            if (temp[pageNumber - 1][i].id === id) {
+                index = i
+                break
+            }
+        }
+        temp[pageNumber - 1].splice(index, 1)
         setRectList(temp)
+        setRectInfo()
+
     }
 
     const setRect = (r) => {
@@ -76,6 +86,21 @@ const PdfReader = () => {
         temp[pageNumber - 1] = r
         setRectList(temp)
     }
+
+    const addRectInfo = (rInfo) => {
+        setRectInfo(rInfo)
+    }
+
+    const updateRectInfo = (rectList) => {
+        if (rectInfo) {
+            rectList.forEach((rect) => {
+                if (rect.id === rectInfo.id) {
+                    return setRectInfo(rect)
+                }
+            })
+        }
+    }
+
     const [pageSize, setPageSize] = useState({})
     const [numPages, setNumPages] = useState(null);
     const [pageNumber, setPageNumber] = useState(1); //setting 1 to show fisrt page
@@ -105,6 +130,25 @@ const PdfReader = () => {
         changePage(1);
     }
 
+    const showRectInfo = (rectInfo) => {
+        return (
+            <div className="information_wrap d-flex justify-content-around">
+                <div>
+                    <div className="information_item">Position-X: {rectInfo.x}</div>
+                    <div className="information_item">Position-Y: {rectInfo.y}</div>
+                </div>
+                <div>
+                    <div className="information_item">Width: {rectInfo.width}px</div>
+                    <div className="information_item">Height: {rectInfo.height}px</div>
+                </div>
+            </div>
+        )
+    }
+
+    const setSelect = (id) => {
+        setSelected(id)
+    }
+
     return (
         <>
         <SibarPdf
@@ -112,8 +156,11 @@ const PdfReader = () => {
         collapse={collapseOpen}
         name={"Pham Trung Hieu"}
         email={"hieupt.ai@gmail.com"}
+        rect={rectList[pageNumber - 1]}
         addRect={addRect}
         deleteRect={deleteRect}
+        addRectInfo={addRectInfo}
+        selectedBoxId={selected}
         />
         <Row className="w-100 mt-4 ms-1">
             <Col md={9} xl={9}>
@@ -123,8 +170,8 @@ const PdfReader = () => {
                     // options={{ workerSrc: "/pdf.worker.js" }}
                     onLoadSuccess={onDocumentLoadSuccess}
                 >
-                    <div>
-                        {/* <Button
+                    {/* <div>
+                        <Button
                             color="danger"
                             onClick={addRect}>
                             Draw
@@ -137,8 +184,8 @@ const PdfReader = () => {
                         <Button
                             color="success">
                             Download
-                        </Button> */}
-                    </div>
+                        </Button>
+                    </div> */}
 
                     <Page
                         height={windowDimensions.height * 80 / 100}
@@ -149,7 +196,11 @@ const PdfReader = () => {
                             rect={rectList[pageNumber - 1]}
                             setRect={setRect}
                             maxWidth={pageSize.width}
-                            maxHeight={pageSize.height} />
+                            maxHeight={pageSize.height} 
+                            updateRectInfo={updateRectInfo}
+                            addRectInfo={addRectInfo}
+                            setSelect={setSelect}
+                            />
                     </Page>
                     <div>
                         <p style={{ textAlign: 'center' }}>
@@ -170,20 +221,21 @@ const PdfReader = () => {
                 </Document>
              </Col>
              <Col md={3} xl={3} className="pdf-reader_information-canvas">
-                 {rectList[pageNumber - 1].map((rect, index) => {
-                    return (
-                        <div className="information_wrap d-flex justify-content-around" key={index}>
-                            <div>
-                                <div className="information_item">Position-X: {rect.x}</div>
-                                <div className="information_item">Position-Y: {rect.y}</div>
-                            </div>
-                            <div>
-                                <div className="information_item">Width: {rect.width}px</div>
-                                <div className="information_item">Height: {rect.height}px</div>
-                            </div>
+                {rectInfo && showRectInfo(rectInfo)}
+                {rectInfo && (
+                    <div className="d-flex justify-content-center p-5">
+                        <div className="dropdown">
+                            <button className="btn btn-primary dropdown-toggle " type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                Dropdown button
+                            </button>
+                            <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                <li><span className="dropdown-item">Text</span></li>
+                                <li><span className="dropdown-item">Key - Value</span></li>
+                                <li><span className="dropdown-item">Checkbox</span></li>
+                            </ul>
                         </div>
-                    )
-                 })}
+                    </div>
+                )}
              </Col>
                 {/* <div className="position-relative right-0 top-0" style={{backgroundColor: 'red', width: '400px', height: '400px'}}></div> */}
         </Row>
